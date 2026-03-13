@@ -66,4 +66,4 @@ The code provided in this repository reproduces the numerical simulations presen
 
 Faith Chepkemoi  
 Department of Mathematics  
-Kenya
+Karatina University,Kenya
