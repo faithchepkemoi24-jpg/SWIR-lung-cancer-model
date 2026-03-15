@@ -5,9 +5,9 @@ from scipy.integrate import solve_ivp
 # ----------------------------
 # Simulation Settings
 # ----------------------------
-years = 50
+years = 20
 t_span = (0, years)
-t_eval = np.linspace(0, years, 1000)
+t_eval = np.linspace(0, years, 500)
 
 # ----------------------------
 # Initial Population Values
@@ -27,7 +27,7 @@ mu = 1.52e-2
 Lambda = 4.56e4
 rho = 0.12
 epsilon = 1.5e-2
-beta = 5.0e-7       # Calibrated from KNCR
+beta = 3.5e-7       # Calibrated from KNCR
 kappa = 0.04
 alpha = 0.05
 sigma = 0.23
@@ -69,4 +69,5 @@ plt.grid(True)
 plt.xlim(0,50)
 plt.ylim(0, max(N0, max(sol.y[1]))*1.05)  # slightly above total pop
 plt.savefig("fig2.png", dpi=300, bbox_inches='tight') 
+
 plt.show()
