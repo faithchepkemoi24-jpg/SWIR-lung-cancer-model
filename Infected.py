@@ -5,9 +5,9 @@ from scipy.integrate import solve_ivp
 # ----------------------------
 # Simulation Settings
 # ----------------------------
-years = 50
+years = 20
 t_span = (0, years)
-t_eval = np.linspace(0, years, 1000)
+t_eval = np.linspace(0, years, 500)
 
 # ----------------------------
 # Initial Population Values
@@ -26,7 +26,7 @@ mu = 1.52e-2
 Lambda = 4.56e4
 rho = 0.12
 epsilon = 1.5e-2
-beta = 5.0e-7
+beta = 3.5e-7
 kappa = 0.04
 alpha = 0.05
 sigma = 0.23
@@ -74,8 +74,9 @@ plt.xlabel("Time (Years)")
 plt.ylabel("Infected Population")
 plt.title("Impact of Intervention Effectiveness on Lung Cancer (I(t))")
 plt.grid(True)
-plt.xlim(0,50)
+plt.xlim(0,20)
 plt.ylim(0, max([max(solutions[d].y[2]) for d in deltas])*1.05)
 plt.legend()
 plt.savefig("fig4.png", dpi=300, bbox_inches='tight') 
 plt.show()
+
