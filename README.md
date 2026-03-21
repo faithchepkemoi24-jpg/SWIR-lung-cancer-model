@@ -31,8 +31,8 @@ Simulations are conducted over a **50-year period** to analyze the long-term dyn
 
 Three intervention scenarios are considered:
 
-1. **No intervention** (δ = 0)
-2. **Weak intervention** (δ = 0.2)
+1. **Weak intervention** (δ = 0.2)
+2. **Moderate intervention** (δ = 0.5)
 3. **Strong intervention** (δ = 0.8)
 
 These scenarios represent different levels of effectiveness of public health interventions such as smoking cessation programs and awareness campaigns.
