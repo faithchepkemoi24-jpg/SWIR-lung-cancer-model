@@ -1,82 +1,82 @@
 import numpy as np
+from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-from scipy.integrate import solve_ivp
 
-# ----------------------------
-# Simulation Settings
-# ----------------------------
-years = 20
-t_span = (0, years)
-t_eval = np.linspace(0, years, 500)
-
-# ----------------------------
-# Initial Population Values
-# ----------------------------
-N0 = 3.0e6
-W0 = 3.1e5
-I0 = 9.5e2
-R0 = 1.6e2
-S0 = N0 - W0 - I0 - R0
-y0 = [S0, W0, I0, R0]
-
-# ----------------------------
-# Parameters
-# ----------------------------
-mu = 1.52e-2
-Lambda = 4.56e4
-rho = 0.12
-epsilon = 1.5e-2
-beta = 3.5e-7
-kappa = 0.04
-alpha = 0.05
-sigma = 0.23
-
-# ----------------------------
-# SWIR Model
-# ----------------------------
-def swir_model(t, y, delta):
+# 1. The SWIR Model Definition
+# y[0]=S, y[1]=W, y[2]=I, y[3]=R
+def swir_model(y, t, Lambda, rho, alpha, beta, epsilon, mu, delta, kappa, sigma):
     S, W, I, R = y
-    dS = (1 - rho)*Lambda + alpha*R - (beta*I + epsilon + mu)*S
-    dW = rho*Lambda + epsilon*S - ((1 - delta)*beta*I + mu)*W
-    dI = beta*S*I + (1 - delta)*beta*W*I - (kappa + mu + sigma)*I
-    dR = kappa*I - (alpha + mu)*R
-    return [dS, dW, dI, dR]
-
-# ----------------------------
-# Solve ODE for δ = 0, 0.2, 0.8
-# ----------------------------
-deltas = [0.0, 0.2, 0.8]
-solutions = {}
-
-for d in deltas:
-    sol = solve_ivp(lambda t, y: swir_model(t, y, d),
-                    t_span, y0, t_eval=t_eval)
-    solutions[d] = sol
-
-# ----------------------------
-# Plot: Infected Population with Peak Markers
-# ----------------------------
-plt.figure(figsize=(10,6))
-styles = ['-', '-', '-']
-colors = ['r','g','b']
-
-for d, style, color in zip(deltas, styles, colors):
-    I_vals = solutions[d].y[2]
-    t_vals = solutions[d].t
-    plt.plot(t_vals, I_vals, linestyle=style, color=color, linewidth=2, label=f'I(t), δ={d}')
     
-    # Peak marker
-    peak_idx = np.argmax(I_vals)
-    plt.plot(t_vals[peak_idx], I_vals[peak_idx], 'o', color=color, markersize=8)
-    plt.text(t_vals[peak_idx]+0.5, I_vals[peak_idx]*1.01, f"{int(I_vals[peak_idx]):,}", color=color)
+    # Differential Equations
+    dSdt = (1 - rho) * Lambda + alpha * R - (beta * I + epsilon + mu) * S
+    dWdt = rho * Lambda + epsilon * S - ((1 - delta) * beta * I + mu) * W
+    dIdt = beta * S * I + (1 - delta) * beta * W * I - (kappa + mu + sigma) * I
+    dRdt = kappa * I - (alpha + mu) * R
+    
+    return [dSdt, dWdt, dIdt, dRdt]
 
-plt.xlabel("Time (Years)")
-plt.ylabel("Infected Population")
-plt.title("Impact of Intervention Effectiveness on Lung Cancer (I(t))")
-plt.grid(True)
-plt.xlim(0,20)
-plt.ylim(0, max([max(solutions[d].y[2]) for d in deltas])*1.05)
-plt.legend()
-plt.savefig("fig4.png", dpi=300, bbox_inches='tight') 
+# 2. Parameters
+
+N0 = 3000000.0
+Lambda = 10.0      # Recruitment
+mu = 0.0001        # Natural death
+alpha = 0.00001    # Relapse
+rho = 0.05         # Initial smoker proportion
+beta = 1.9e-6      # Transmission rate
+epsilon = 0.08     # Initiation rate
+kappa = 0.9        # Recovery rate
+sigma = 0.15       # Disease mortality (Cancer deaths)
+
+# 3. Initial Conditions 
+# S0=2.68M, W0=310k, I0=950, R0=160
+y0 = [2688890.0, 310000.0, 950.0, 160.0]
+
+# 4. Time Span: 0 to 20 Years
+t = np.linspace(0, 20, 2000)
+
+# 5. Intervention Scenarios to Compare
+deltas = [0.2, 0.5, 0.8]
+colors = ['red', 'orange', 'purple', 'green']
+
+plt.figure(figsize=(12, 7))
+
+print("--- Peak Analysis Table ---")
+print(f"{'Delta':<10} | {'Peak Time (yr)':<15} | {'Peak Infected':<15}")
+print("-" * 45)
+
+for delta, color in zip(deltas, colors):
+    # Solve the ODE for the specific delta
+    sol = odeint(swir_model, y0, t, args=(Lambda, rho, alpha, beta, epsilon, mu, delta, kappa, sigma))
+    I_curve = sol[:, 2] # Extract only the Infected (Red) compartment
+    
+    # Plot the Infected curve
+    plt.plot(t, I_curve, lw=3.5, label=f'Infected (delta = {delta})', color=color)
+    
+    # Find the peak point
+    peak_idx = np.argmax(I_curve)
+    peak_time = t[peak_idx]
+    peak_val = I_curve[peak_idx]
+    
+    # Print the values to console
+    print(f"{delta:<10} | {peak_time:<15.2f} | {int(peak_val):<15,}")
+    
+    # Annotate the peak on the graph
+    plt.annotate(f'Peak: {int(peak_val):,}', 
+                 xy=(peak_time, peak_val), 
+                 xytext=(peak_time + 1.2, peak_val + 50000),
+                 arrowprops=dict(arrowstyle='->', lw=1.5, color='black'),
+                 fontsize=10, fontweight='bold', 
+                 bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=color, alpha=0.7))
+
+# 6. Formatting the Graph
+plt.title('Impact of Effectiveness (delta) on the Infected Population', fontsize=14, fontweight='bold')
+plt.xlabel('Years', fontsize=12)
+plt.ylabel('Number of Infected Individuals', fontsize=12)
+plt.grid(True, linestyle=':', alpha=0.6)
+plt.legend(loc='upper right', shadow=True, fontsize=11)
+plt.xlim(0, 20)
+plt.ylim(0, 2000000) # Adjust height for visibility
+plt.tight_layout()
+
+# 7. Final Output
 plt.show()
-
